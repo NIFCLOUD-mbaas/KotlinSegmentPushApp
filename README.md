@@ -6,7 +6,7 @@
 ## 概要
 * [ニフクラ mobile backend](https://mbaas.nifcloud.com/)の『プッシュ通知』機能とプッシュ通知を受信する際、プッシュ通知の『端末の絞り込み配信』機能を実装したサンプルプロジェクトです
 * 簡単な操作ですぐに [ニフクラ mobile backend](https://mbaas.nifcloud.com/)の機能を体験いただけます★☆
-* このサンプルはAndroid 4.0以降に対応しています
+* このサンプルはAndroid 8.0.0以降に対応しています
 
 ## ニフクラ mobile backendって何？？
 スマートフォンアプリのバックエンド機能（プッシュ通知・データストア・会員管理・ファイルストア・SNS連携・位置情報検索・スクリプト）が**開発不要**、しかも基本**無料**(注1)で使えるクラウドサービス！
@@ -17,10 +17,9 @@
 
 ## 動作環境
 
-* Android Studio ver. 3.1
-* Android 6.0
-* Android SDK v3
-    * SDK v2系だと動作しないので注意
+* Android Studio Bumblebee | 2021.1.1 Patch 2
+* Android 8.0.0
+* NCMB Kotlin SDK 1.1.0
 
 ※このサンプルアプリは、プッシュ通知を受信する必要があるため実機ビルドが必要です<br>
 ※上記内容で動作確認をしています
@@ -123,7 +122,7 @@ https://mbaas.nifcloud.com/doc/current/common/push_setup_fcm_json.html<br>
 * インストールしたアプリを起動します
  * プッシュ通知の許可を求めるアラートが出たら、必ず許可してください！
 
-![画像11](/readme-img/Action1.png)
+<center><img src="readme-img/Action1.png" alt="画像11" width="300px"></center>
 
 * アプリを起動すると、画面に登録した端末情報が表示されます。
    - `ObjectId`: 登録した端末のクラス内の管理用文字列
@@ -142,7 +141,7 @@ https://mbaas.nifcloud.com/doc/current/common/push_setup_fcm_json.html<br>
 * 次に絞り込み条件を指定するために、端末情報を登録します。
 * Channels情報を登録しましょう！アプリのチャネルを「A」に設定してください。
 
-![画像13](/readme-img/Action3.png)
+<center><img src="readme-img/Action3.png" alt="画像13" width="300px"></center>
 
 * カスタム端末情報`Prefectures`も登録します。入力で`Tokyo`を入れてください。
 * 「SAVE」ボタンをクリックします。
@@ -185,7 +184,7 @@ https://mbaas.nifcloud.com/doc/current/common/push_setup_fcm_json.html<br>
 サンプルプロジェクトに実装済みの内容のご紹介
 
 #### SDKのインポートと初期設定
-* ニフクラ mobile backend の[ドキュメント（クイックスタート）](https://mbaas.nifcloud.com/doc/current/introduction/quickstart_android.html#/Android/)をご用意していますので、ご活用ください
+* ニフクラ mobile backend の[ドキュメント（クイックスタート）](https://mbaas.nifcloud.com/doc/current/introduction/quickstart_kotlin.html)をご用意していますので、ご活用ください
 
 #### ロジック
  * `activity_main.xml`でデザインを作成し、`MainActivity.kt`にロジックを書いています
@@ -194,7 +193,8 @@ https://mbaas.nifcloud.com/doc/current/common/push_setup_fcm_json.html<br>
 
 ```kotlin
 //**************** APIキーの設定とSDKの初期化 **********************
-NCMB.initialize(this, "YOUR_APPLICATION_KEY", "YOUR_CLIENT_KEY");
+NCMB.initialize(this, "YOUR_APPLICATION_KEY", "YOUR_CLIENT_KEY")
+NCMB.initializePush(this)
 
 ```
 
@@ -210,17 +210,22 @@ val tmpArray = JSONArray()
 tmpArray.put(item)
 installation.channels = tmpArray
 installation.put("Prefectures", prefectures)
-installation.saveInBackground { e ->
-    if (e != null) {
-        //保存失敗
-        Toast.makeText(this@MainActivity, "端末情報の保存に失敗しました。" + e.message, Toast.LENGTH_LONG).show()
-    } else {
-        //保存成功
-        Toast.makeText(this@MainActivity, "端末情報の保存に成功しました。", Toast.LENGTH_LONG).show()
+installation.saveInBackground(NCMBCallback { e, ncmbObj ->
+    runOnUiThread {
+        if (e != null) {
+            Toast.makeText(
+                this,
+                "端末情報の保存に失敗しました。" + e.message,
+                Toast.LENGTH_LONG
+            ).show()
+        } else {
+            Toast.makeText(this, "端末情報の保存に成功しました。", Toast.LENGTH_LONG)
+                .show()
+        }
     }
-}
+})
 ```
 
 
 ## 参考
-* ニフクラ mobile backend の[ドキュメント（プッシュ通知（Android））](https://mbaas.nifcloud.com/doc/current/push/basic_usage_android.html)をご用意していますので、ご活用ください
+* ニフクラ mobile backend の[ドキュメント（プッシュ通知（Android））](https://mbaas.nifcloud.com/doc/current/push/basic_usage_kotlin.html)をご用意していますので、ご活用ください

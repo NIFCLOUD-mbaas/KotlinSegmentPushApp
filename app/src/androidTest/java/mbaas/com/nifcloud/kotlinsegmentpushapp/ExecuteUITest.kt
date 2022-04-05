@@ -1,4 +1,4 @@
-package com.nifcloud.mbaas.ncmbpushquickstart
+package mbaas.com.nifcloud.kotlinsegmentpushapp
 
 import android.view.View
 import androidx.test.espresso.Espresso
@@ -18,9 +18,6 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertEquals
-import mbaas.com.nifcloud.kotlinsegmentpushapp.MainActivity
-import mbaas.com.nifcloud.kotlinsegmentpushapp.R
-import mbaas.com.nifcloud.kotlinsegmentpushapp.Utils
 import mbaas.com.nifcloud.kotlinsegmentpushapp.Utils.Companion.NOTIFICATION_TEXT
 import mbaas.com.nifcloud.kotlinsegmentpushapp.Utils.Companion.NOTIFICATION_TITLE
 import org.hamcrest.CoreMatchers
@@ -33,20 +30,20 @@ import org.junit.runner.RunWith
 @LargeTest
 class ExecuteUITest {
 
-    var _objectId: ViewInteraction? = null
-    var _appversion: ViewInteraction? = null
-    var _channels: ViewInteraction? = null
-    var _devicetoken: ViewInteraction? = null
-    var _sdkversion: ViewInteraction? = null
-    var _timezone: ViewInteraction? = null
-    var _createdate: ViewInteraction? = null
-    var _updatedate: ViewInteraction? = null
-    var _txtPrefectures: ViewInteraction? = null
-    var btnSave: ViewInteraction? = null
+    private var _objectId: ViewInteraction? = null
+    private var _appversion: ViewInteraction? = null
+    private var _channels: ViewInteraction? = null
+    private var _devicetoken: ViewInteraction? = null
+    private var _sdkversion: ViewInteraction? = null
+    private var _timezone: ViewInteraction? = null
+    private var _createdate: ViewInteraction? = null
+    private var _updatedate: ViewInteraction? = null
+    private var _txtPrefectures: ViewInteraction? = null
+    private var btnSave: ViewInteraction? = null
 
     private var decorView: View? = null
-    val TIMEOUT = 150000
-    var device: UiDevice? = null
+    private val _timeout = 150000
+    private var device: UiDevice? = null
 
     @get:Rule
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
@@ -131,10 +128,10 @@ class ExecuteUITest {
     @Throws(InterruptedException::class)
     fun onSendNotification() {
         val utils = Utils()
-        utils.sendPushWithSearchCondition()
+        utils.sendPush()
         Thread.sleep(30000)
         device!!.openNotification()
-        device!!.wait(Until.hasObject(By.text(NOTIFICATION_TITLE)), TIMEOUT.toLong())
+        device!!.wait(Until.hasObject(By.text(NOTIFICATION_TITLE)), _timeout.toLong())
         val title: UiObject2 = device!!.findObject(By.text(NOTIFICATION_TITLE))
         val text: UiObject2 = device!!.findObject(By.text(NOTIFICATION_TEXT))
         assertEquals(NOTIFICATION_TITLE, title.text)

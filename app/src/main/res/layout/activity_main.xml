@@ -45,7 +45,6 @@
                 android:layout_column="1" />
 
             <TextView
-                android:text="ObjectId"
                 android:id="@+id/txtObject"
                 android:textSize="20dp"
                 android:layout_marginTop="42dp"
