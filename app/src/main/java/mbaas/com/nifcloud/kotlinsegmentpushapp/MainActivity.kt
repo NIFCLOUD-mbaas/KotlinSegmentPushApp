@@ -1,14 +1,16 @@
-package mbaas.com.nifcloud.kotlinsegmentpushapp;
+package mbaas.com.nifcloud.kotlinsegmentpushapp
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.nifcloud.mbaas.core.NCMB
+import com.nifcloud.mbaas.core.NCMBCallback
 import com.nifcloud.mbaas.core.NCMBInstallation
+import com.nifcloud.mbaas.core.NCMBQuery
 import org.json.JSONArray
 import org.json.JSONException
-import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -27,10 +29,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-
         //**************** APIキーの設定とSDKの初期化 **********************
-        NCMB.initialize(this, "YOUR_APPLICATION_KEY", "YOUR_CLIENT_KEY")
-
+        NCMB.initialize(
+            this,
+            "YOUR_APPLICATION_KEY",
+            "YOUR_CLIENT_KEY"
+        )
+        NCMB.initializePush(this)
 
         //表示する端末情報のデータを反映
         _objectId = findViewById<View>(R.id.txtObject) as TextView
@@ -43,43 +48,49 @@ class MainActivity : AppCompatActivity() {
         _updatedate = findViewById<View>(R.id.txtUpdatedate) as TextView
         _txtPrefectures = findViewById<View>(R.id.txtPrefecture) as EditText
 
-        var installation = NCMBInstallation.getCurrentInstallation()
-        installation.getDeviceTokenInBackground { token, e ->
-            val query = NCMBInstallation.getQuery()
-            //同じRegistration IDをdeviceTokenフィールドに持つ端末情報を検索する
-            query.whereEqualTo("deviceToken", token)
-
-            //データストアの検索を実行
-            query.findInBackground { results, e ->
-                //検索された端末情報のobjectIdを設定
-                if (e == null) {
-                    installation = results[0]
-
-                    //表示する端末情報を指定
-                    _objectId.text = installation.objectId
-                    _devicetoken.text = token
-                    _appversion.text = installation.appVersion
-                    try {
-                        if (installation.channels != null) {
-                            val selectChannel = installation.channels.get(0).toString()
-                            val channelArray = arrayOf("A", "B", "C", "D")
-                            val selectId = Arrays.asList(*channelArray).indexOf(selectChannel)
-                            _channels.setSelection(selectId)
+        var installation = NCMBInstallation.currentInstallation
+        installation.getDeviceTokenInBackground(NCMBCallback { e, token ->
+            if (e != null) {
+                //保存に失敗した場合の処理
+                Log.d("error", "保存に失敗しました : " + e.message)
+            } else {
+                //保存に成功した場合の処理
+                val query = NCMBQuery.forInstallation()
+                query.whereEqualTo("deviceToken", token as String)
+                query.findInBackground(NCMBCallback { e, objects ->
+                    if (e != null) {
+                        //エラー時の処理
+                        println("検索に失敗しました。エラー:" + e.message)
+                    } else {
+                        objects as List<NCMBInstallation>
+                        installation = objects[0]
+                        runOnUiThread {
+                            _objectId.text = installation.getObjectId()
+                            _devicetoken.text = token
+                            _appversion.text = installation.appVersion
+                            try {
+                                if (installation.channels != null) {
+                                    val selectChannel = installation.channels
+                                    selectChannel as JSONArray
+                                    val channelArray = arrayOf("A", "B", "C", "D")
+                                    val selectId = channelArray.indexOf(selectChannel[0].toString())
+                                    _channels.setSelection(selectId)
+                                }
+                            } catch (e2: JSONException) {
+                                e2.printStackTrace()
+                            }
+                            _sdkversion.text = installation.sdkVersion
+                            _timezone.text = installation.timeZone
+                            _createdate.text = installation.getCreateDate().toString()
+                            _updatedate.text = installation.getUpdateDate().toString()
+                            if (installation.getString("Prefectures") != null) {
+                                _txtPrefectures.setText(installation.getString("Prefectures"))
+                            }
                         }
-                    } catch (e2: JSONException) {
-                        e2.printStackTrace()
                     }
-                    _sdkversion.text = installation.sdkVersion
-                    _timezone.text = installation.timeZone
-                    _createdate.text = installation.createDate.toString()
-                    _updatedate.text = installation.updateDate.toString()
-                    if (installation.getString("Prefectures") != null) {
-                        _txtPrefectures.setText(installation.getString("Prefectures"))
-                    }
-                }
-
+                })
             }
-        }
+        })
 
         val _btnSave = findViewById<View>(R.id.btnSave) as Button
         _btnSave.setOnClickListener {
@@ -91,15 +102,20 @@ class MainActivity : AppCompatActivity() {
             tmpArray.put(item)
             installation.channels = tmpArray
             installation.put("Prefectures", prefectures)
-            installation.saveInBackground { e ->
-                if (e != null) {
-                    //保存失敗
-                    Toast.makeText(this@MainActivity, "端末情報の保存に失敗しました。" + e.message, Toast.LENGTH_LONG).show()
-                } else {
-                    //保存成功
-                    Toast.makeText(this@MainActivity, "端末情報の保存に成功しました。", Toast.LENGTH_LONG).show()
+            installation.saveInBackground(NCMBCallback { e, ncmbObj ->
+                runOnUiThread {
+                    if (e != null) {
+                        Toast.makeText(
+                            this,
+                            "端末情報の保存に失敗しました。" + e.message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(this, "端末情報の保存に成功しました。", Toast.LENGTH_LONG)
+                            .show()
+                    }
                 }
-            }
+            })
         }
 
     }
