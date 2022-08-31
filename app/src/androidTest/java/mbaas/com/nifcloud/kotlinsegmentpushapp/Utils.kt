@@ -1,5 +1,11 @@
 package mbaas.com.nifcloud.kotlinsegmentpushapp
 
+import android.os.Build
+import android.util.Log
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObjectNotFoundException
+import androidx.test.uiautomator.UiSelector
 import com.nifcloud.mbaas.core.NCMBException
 import com.nifcloud.mbaas.core.NCMBPush
 
@@ -22,6 +28,20 @@ class Utils {
         }
         catch (error: NCMBException){
             throw error
+        }
+    }
+
+    internal fun allowPermissionsIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            val device = UiDevice.getInstance(getInstrumentation())
+            val allowPermissions = device.findObject(UiSelector().text("Allow"))
+            if (allowPermissions.exists()) {
+                try {
+                    allowPermissions.click()
+                } catch (e: UiObjectNotFoundException) {
+                    Log.d("NCMBTest", "Error: " + e.message)
+                }
+            }
         }
     }
 }
